@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style>
+
+.links line {
+  stroke: #aaa;
+  stroke-width: 10;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: black;
+  stroke-width: 2;
+  fill: white;
+}
+
+</style>
+
+<body>
+	<svg width="960" height="2000"></svg>
+</body>
+
+<script src="https://d3js.org/d3.v4.0.0-alpha.50.min.js"></script>
+<script>
+
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+
+var lineColors = {
+  '1': '#E00034',
+  'A': '#0039A6',
+  '4': '#009B3A',
+  'R': '#FECB00',
+  'D': '#FF6319',
+  '7': '#B634BB',
+  'L': '#939598',
+  'J': '#955214',
+  'transfer': '#4D4D4D'
+};
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink()
+    	.id(function(d) { return d.id; })
+    	.distance(function(d) { return d.distance; })
+    )
+    // .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+
+d3.queue()
+.defer(d3.tsv, "stations.tsv")
+.defer(d3.tsv, "transfers.tsv")
+.await(function(error, stations, transfers) {
+  if (error) throw error;
+
+  stations.forEach(parseStation);
+  var links = getLinks(stations, transfers);
+
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(links)
+    .enter().append("line")
+    .style('stroke', function(d) {
+    	return lineColors[d.type];
+    })
+    .style('stroke-width', function(d) {
+    	return d.type === 'transfer' ? 4 : 10;
+    });
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("circle")
+    .data(stations)
+    .enter().append("circle")
+      .attr("r", 4)
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  node.append("title")
+      .text(function(d) { return d.id; });
+
+  simulation
+      .nodes(stations)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(links);
+
+  // ticked();
+  // simulation.stop();
+
+  function ticked() {
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  }
+
+});
+
+
+function parseStation(station) {
+	station.order = +station.order;
+	station.x = +station.x;
+	station.y = +station.y;
+
+	station.x0 = station.x;
+	station.y0 = station.y;
+
+	station.id = station.line + ' ' + station.name;
+}
+
+function getLinks(stations, transfers) {
+	var links = [];
+
+	stations.forEach(function(station) {
+		var nextStation = stations.filter(function(st) {
+			return st.line == station.line && st.order == station.order + 1;
+		});
+
+		if(nextStation.length) {
+			links.push({
+				'source': station.id,
+				'target': nextStation[0].id,
+				'distance': distance(station, nextStation[0]),
+				'type': station.line
+			})
+		} else {
+			return;
+		}
+	});
+
+	transfers.forEach(function(transfer) {
+		var source = stations.filter(function(st) {
+			return st.id == transfer.fromLine + ' ' + transfer.fromStation;
+		})[0];
+
+		var target = stations.filter(function(st) {
+			return st.id == transfer.toLine + ' ' + transfer.toStation;
+		})[0];
+
+		links.push({
+			'source': source.id,
+			'target': target.id,
+			'distance': distance(source, target),
+			'type': 'transfer'
+		});
+	});
+
+	return links;
+}
+
+function distance(a,b) {
+	return Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
+}
+
+function dragstarted(d) {
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart()
+  simulation.fix(d);
+}
+
+function dragged(d) {
+  simulation.fix(d, d3.event.x, d3.event.y);
+}
+
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  simulation.unfix(d);
+}
+
+
+</script>

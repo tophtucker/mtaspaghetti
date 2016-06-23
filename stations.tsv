@@ -1,0 +1,105 @@
+line	order	name	x	y
+1	1	Van Cordlandt Park 242 St	202	132
+1	2	238 St	202	160
+1	3	231 St	202	189
+1	4	225 St Marble Hill	202	218
+1	5	215 St	156	276
+1	6	207 St	156	299
+1	7	Dyckman St	146	333
+1	8	191 St	146	356
+1	9	181 St	146	387
+1	10	Washington Heights 168 St	146	462
+1	11	157 St	146	505
+1	12	145 St	146	584
+1	13	137 City College	146	623
+1	14	125 St	146	655
+1	15	116 St Columbia University	146	697
+1	16	110 St Cathedral Parkway	146	730
+1	17	103 St	156	775
+1	18	96 St	156	815
+1	19	86 St	156	856
+1	20	79 St	156	905
+1	21	72 St	156	953
+1	22	66 St	182	1012
+1	23	59 St Columbus Circle	227	1057
+1	24	50 St	321	1151
+1	25	Times Sq 42 St	334	1211
+1	26	34 St Penn Station	334	1292
+1	27	28 St	334	1321
+1	28	23 St	334	1351
+1	29	18 St	334	1380
+1	30	14 St	334	1409
+1	31	Christopher St Sheridan Sq	334	1495
+1	32	Houston St	334	1550
+1	33	Canal St	334	1614
+1	34	Franklin St	334	1652
+1	35	Chambers St West Broadway	355	1700
+1	36	Cortlandt St	404	1785
+1	37	Rector St	429	1827
+1	38	South Ferry	537	1889
+A	1	Inwood 207 St	129	300
+A	2	Dyckman St	111	318
+A	3	190 St	107	358
+A	4	181 St	107	386
+A	5	175 St GW Bridge Bus Terminal	128	416
+A	6	Washington Heights 168 St	168	456
+A	7	145 St	241	586
+A	8	125 St	241	673
+A	9	59 St Columbus Circle	251	1043
+A	10	42 St Port Authority Bus Terminal	251	1211
+A	11	34 St Penn Station	251	1292
+A	12	14 St	251	1398
+A	13	West 4 St	433	1525
+A	14	Canal St	433	1620
+A	15	Chambers/Church	433	1682
+A	16	Fulton St	637	1749
+4	1	125 St	605	670
+4	2	86 St	605	855
+4	3	59 St Lexington Ave	605	1075
+4	4	42 St Grand Central	605	1231
+4	5	14 St Union Sq	585	1388
+4	6	Brooklyn Bridge Chambers St	585	1678
+4	7	Fulton St	557	1759
+4	8	Wall St	557	1821
+4	9	Bowling Green	557	1854
+R	1	59 St Lexington Ave	626	1065
+R	2	Midtown 57 St	354	1089
+R	3	49 St	354	1159
+R	4	Times Sq 42 St	363	1200
+R	5	34 St Herald Sq	435	1272
+R	6	28 St	488	1325
+R	7	23 St	514	1351
+R	8	14 St Union Sq	535	1409
+R	9	8 St NYU	535	1453
+R	10	Prince St	535	1560
+R	11	Canal St	545	1632
+R	12	City Hall	545	1682
+R	13	Cortlandt St	507	1766
+R	14	Rector St	507	1822
+R	15	Whitehall St	589	1876
+D	1	155 St 8 Av	284	515
+D	2	145 St	231	586
+D	3	125 St	231	673
+D	4	59 St Columbus Circle	241	1043
+D	5	7 Av	381	1127
+D	6	47-50 St Rockefeller Center	453	1157
+D	7	42 St Bryant Park	453	1201
+D	8	34 St Herald Sq	453	1292
+D	9	West 4 St	453	1525
+D	10	Broadway-Lafayette St	606	1547
+D	11	Grand St	692	1608
+7	1	42 St Grand Central	588	1221
+7	2	5 Av	498	1221
+7	3	Times Sq 42 St	322	1221
+7	4	34 St Hudson Yards	140	1286
+L	1	1 Av	709	1398
+L	2	3 Av	651	1398
+L	3	14 St Union Sq	565	1398
+L	4	6 Av	420	1398
+L	5	14 St 8 Av	271	1398
+J	1	Essex St	755	1581
+J	2	Bowery	662	1581
+J	3	Canal St	638	1632
+J	4	Brooklyn Bridge Chambers St	638	1678
+J	5	Fulton St	622	1759
+J	6	Broad St	622	1835
