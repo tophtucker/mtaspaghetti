@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MTA spaghetti</title>
 
 <style>
 
@@ -70,7 +72,7 @@ img.fork {
 </style>
 
 <body>
-	<svg width="960" height="1500"></svg>
+	<svg width="960" height="1700"></svg>
 	<div class="controls">
 		<button class="reset">Reset</button>
 		<button class="repel">Repel</button>
@@ -102,11 +104,8 @@ var simulation = d3.forceSimulation()
     	.id(function(d) { return d.id; })
     	.distance(function(d) { return d.distance; })
     )
-    // .force("charge", d3.forceManyBody())
     .force("center", d3.forceCenter(width / 2, height / 2))
-
     .alphaDecay(0).restart();
-
 
 d3.queue()
 .defer(d3.tsv, "stations.tsv")
@@ -114,6 +113,7 @@ d3.queue()
 .await(function(error, stations, transfers) {
   if (error) throw error;
 
+  // projectStations(stations);
   stations.forEach(parseStation);
   var links = getLinks(stations, transfers);
 
@@ -185,11 +185,13 @@ d3.queue()
       if(!d3.select(this).classed('active')) {
         // enable fork
         d3.select(this).classed('active', true);
+        d3.select('body').style('cursor', 'none');
         simulation.force("fork", forceFork(.1, 100, d3.select('body')));
 
       } else {
         // disable fork
         d3.select(this).classed('active', false);
+        d3.select('body').style('cursor', 'default');
         simulation.force("fork", null);
         d3.select('img.fork').remove();
       }
@@ -213,6 +215,24 @@ d3.queue()
 
 });
 
+// fit stations to screen
+function projectStations(stations) {
+  var xExtent = d3.extent(stations.map(function(d) { return +d.x; }));
+  var yExtent = d3.extent(stations.map(function(d) { return +d.y; }));
+
+  var x = d3.scaleLinear()
+    .domain(xExtent)
+    .range([0,window.innerWidth]);
+
+  var y = d3.scaleLinear()
+    .domain(yExtent)
+    .range([0,window.innerHeight]);
+
+  stations.forEach(function(station) {
+    station.x = x(+station.x);
+    station.y = y(+station.y);
+  })
+}
 
 function parseStation(station) {
 	station.order = +station.order;
@@ -320,7 +340,7 @@ function forceFork(_, __, ___) {
 
     fork = container.append('img')
       .classed('fork', true)
-      .attr('src', 'fork2.png')
+      .attr('src', 'fork.png')
       .attr('width', 700)
       .attr('height', 700);
 
