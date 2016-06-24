@@ -15,10 +15,35 @@
   fill: white;
 }
 
+.controls {
+	position: fixed;
+	top: 1em;
+	left: 1em;
+}
+
+button {
+	background: white;
+	border: 1px solid black;
+	border-radius: 50%;
+	width: 5em;
+	height: 5em;
+	padding: 1em;
+	cursor: pointer;
+	opacity: .5;
+}
+
+button:hover {
+	opacity: 1;
+}
+
 </style>
 
 <body>
 	<svg width="960" height="1500"></svg>
+	<div class="controls">
+		<button class="reset">Reset</button>
+		<button class="repel">Repel</button>
+	</div>
 </body>
 
 <script src="https://d3js.org/d3.v4.0.0-alpha.50.min.js"></script>
@@ -90,6 +115,36 @@ d3.queue()
 
   simulation.force("link")
       .links(links);
+
+  d3.select('button.repel')
+  	.on('mouseenter', function() {
+  		simulation
+	  		.alphaTarget(0.3).restart()
+	  		.force("charge", d3.forceManyBody());
+  	})
+  	.on('mouseleave', function() {
+  		simulation
+	  		.alphaTarget(0)
+  			.force("charge", null);
+  	});
+
+  d3.select('button.reset')
+  	.on('mouseenter', function() {
+  		simulation
+	  		.alphaTarget(0.3).restart()
+	  		.force("resetX", d3.forceX(function(d) {
+	  			return d.x0;
+	  		}))
+	  		.force("resetY", d3.forceY(function(d) {
+	  			return d.y0;
+	  		}));
+  	})
+  	.on('mouseleave', function() {
+  		simulation
+	  		.alphaTarget(0)
+  			.force("resetX", null)
+  			.force("resetY", null);
+  	});
 
   // ticked();
   // simulation.stop();
