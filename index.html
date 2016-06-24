@@ -286,6 +286,8 @@ function dragended(d) {
 function forceFork(_, __, ___) {
 
   var active = false,
+      clockwise = 1,
+
       nodes,
       fork,
       forkAngle = 0,
@@ -300,15 +302,15 @@ function forceFork(_, __, ___) {
 
     if(!active) return;
 
-    forkAngle -= strength;
-    fork.style('transform', 'translate(-50%,-50%) rotate(' +forkAngle + 'rad)');
+    forkAngle += clockwise * strength;
+    fork.style('transform', 'translate(-50%,-50%) rotate(' + forkAngle + 'rad)');
 
     for (var i = 0, n = nodes.length, node, k = alpha; i < n; ++i) {
       node = nodes[i];
       node.forking = distance(node, center) < radius;
       if(node.forking) {
-        node.vx += strength * (node.y - center.y);
-        node.vy += strength * -(node.x - center.x);
+        node.vx += clockwise * strength * -(node.y - center.y);
+        node.vy += clockwise * strength * (node.x - center.x);
       }
     }
   }
@@ -334,7 +336,7 @@ function forceFork(_, __, ___) {
     });
 
     container
-      .on('mousedown', function() { active = true; })
+      .on('mousedown', function() { clockwise = d3.event.shiftKey ? -1 : 1; active = true; })
       .on('touchstart', function() { active = true; })
       .on('mouseup', function() { active = false; })
       .on('touchend', function() { active = false; })
