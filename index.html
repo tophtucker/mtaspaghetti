@@ -74,8 +74,13 @@ text {
   font-size: 10px;
   fill: rgba(0,0,0,.2);
   pointer-events: none;
-}
 
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 </style>
 
 <body>
@@ -359,9 +364,9 @@ function forceFork(_, __, ___) {
 
     fork = container.append('img')
       .classed('fork', true)
-      .attr('src', 'fork.png')
-      .attr('width', 700)
-      .attr('height', 700);
+      .attr('src', 'fork.png?v=1')
+      .attr('width', 500)
+      .attr('height', 500);
 
     container.on('mousemove', function() {
       fork
