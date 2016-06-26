@@ -57,11 +57,7 @@ button:hover {
 	opacity: 1;
 }
 
-button.fork {
-  border: 1px dashed black;
-}
-
-button.fork.active {
+button.active {
   border: 1px solid white;
   background: black;
   color: white;
@@ -208,12 +204,16 @@ d3.queue()
   // 	});
 
   d3.select('button.reset')
-  	.on('mouseenter', startReset)
-    .on('touchdown', startReset)
-  	.on('mouseleave', stopReset)
-    .on('touchup', stopReset);
+  	.on('mousedown', startReset)
+    .on('touchstart', startReset)
+  	.on('mouseup', stopReset)
+    .on('touchend', stopReset);
 
   function startReset() {
+    console.log('start reset');
+    console.log(d3.event);
+    d3.event.stopPropagation();
+    d3.select(this).classed('active', true);
     simulation
       .alphaTarget(0.3).restart()
       .force("resetX", d3.forceX(function(d) {
@@ -225,6 +225,10 @@ d3.queue()
   }
 
   function stopReset() {
+    console.log('stop reset');
+    console.log(d3.event);
+    d3.event.stopPropagation();
+    d3.select(this).classed('active', false);
     simulation
       .alphaTarget(0)
       .force("resetX", null)
@@ -237,7 +241,7 @@ d3.queue()
         // enable fork
         d3.select(this).classed('active', true);
         simulation
-          .force("fork", forceFork(.1, (window.innerWidth > 555 ? 100 : 50), d3.select('body')))
+          .force("fork", forceFork(.1, (window.innerWidth > 555 ? 100 : 40), d3.select('body')))
           .alphaDecay(0).restart();
 
       } else {
