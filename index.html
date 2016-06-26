@@ -8,10 +8,14 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 960px;
+  height: 1700px;
 }
 
 svg {
   overflow: visible;
+  width: 100%;
+  height: 100%;
 }
 
 .links line {
@@ -66,7 +70,8 @@ img.fork {
   position: absolute;
   pointer-events: none;
   z-index: 2;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%,0%);
+  transform-origin: 50% 0%;
 }
 
 text {
@@ -81,14 +86,27 @@ text {
   -ms-user-select: none;
   user-select: none;
 }
+
+@media (max-width: 500px) {
+  body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  text {
+    display: none;
+  }
+}
+
 </style>
 
 <body>
-	<svg width="960" height="1700"></svg>
+	<svg></svg>
 	<div class="controls">
-		<button class="reset">Reset</button>
-		<button class="repel">Repel</button>
     <button class="fork">Fork</button>
+    <button class="reset">Reset</button>
+    <!-- <button class="repel">Repel</button> -->
 	</div>
 </body>
 
@@ -96,8 +114,8 @@ text {
 <script>
 
 var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
+    width = svg.node().getBoundingClientRect().width,
+    height = svg.node().getBoundingClientRect().height;
 
 var lineColors = {
   '1': '#E00034',
@@ -128,7 +146,7 @@ d3.queue()
 .await(function(error, stations, transfers) {
   if (error) throw error;
 
-  // projectStations(stations);
+  if(innerWidth <= 500) projectStations(stations);
   stations.forEach(parseStation);
   var links = getLinks(stations, transfers);
 
@@ -204,21 +222,22 @@ d3.queue()
       if(!d3.select(this).classed('active')) {
         // enable fork
         d3.select(this).classed('active', true);
-        d3.select('body').style('cursor', 'none');
         simulation
-          .force("fork", forceFork(.1, 100, d3.select('body')))
+          .force("fork", forceFork(.1, (window.innerWidth > 500 ? 100 : 50), d3.select('body')))
           .alphaDecay(0).restart();
 
       } else {
         // disable fork
         d3.select(this).classed('active', false);
-        d3.select('body').style('cursor', 'default');
         d3.select('img.fork').remove();
         simulation
           .force("fork", null)
           .alphaDecay(0.0228).restart();
       }
     })
+    .each(function() {
+      this.click();
+    });
 
   // ticked();
   // simulation.stop();
@@ -253,7 +272,7 @@ function projectStations(stations) {
     .range([0,window.innerHeight]);
 
   stations.forEach(function(station) {
-    station.x = x(+station.x);
+    station.x = y(+station.x);
     station.y = y(+station.y);
   })
 }
@@ -347,7 +366,7 @@ function forceFork(_, __, ___) {
     if(!active) return;
 
     forkAngle += clockwise * strength;
-    fork.style('transform', 'translate(-50%,-50%) rotate(' + forkAngle + 'rad)');
+    fork.style('transform', 'translate(-50%,0%) rotate(' + forkAngle + 'rad)');
 
     for (var i = 0, n = nodes.length, node, k = alpha; i < n; ++i) {
       node = nodes[i];
@@ -364,9 +383,8 @@ function forceFork(_, __, ___) {
 
     fork = container.append('img')
       .classed('fork', true)
-      .attr('src', 'fork.png?v=1')
-      .attr('width', 500)
-      .attr('height', 500);
+      .attr('src', 'fork.png?v=2')
+      .attr('width', radius * 2.5);
 
     container.on('mousemove', function() {
       fork
@@ -376,6 +394,28 @@ function forceFork(_, __, ___) {
       center = {
         x: d3.mouse(this)[0],
         y: d3.mouse(this)[1]
+      };
+    });
+
+    container.on('touchmove', function() {
+      fork
+        .style('left', d3.touch(this)[0] + 'px')
+        .style('top', d3.touch(this)[1] + 'px');
+
+      center = {
+        x: d3.touch(this)[0],
+        y: d3.touch(this)[1]
+      };
+    });
+
+    container.on('touchdown', function() {
+      fork
+        .style('left', d3.touch(this)[0] + 'px')
+        .style('top', d3.touch(this)[1] + 'px');
+
+      center = {
+        x: d3.touch(this)[0],
+        y: d3.touch(this)[1]
       };
     });
 
