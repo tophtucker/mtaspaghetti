@@ -86,7 +86,7 @@ text {
   user-select: none;
 }
 
-@media (max-width: 555px) {
+@media (max-width: 666px) {
   body, html {
     width: 100%;
     height: 100%;
@@ -150,7 +150,7 @@ d3.queue()
 .await(function(error, stations, transfers) {
   if (error) throw error;
 
-  if(innerWidth <= 555) projectStations(stations);
+  if(innerWidth <= 666) projectStations(stations);
   stations.forEach(parseStation);
   var links = getLinks(stations, transfers);
 
@@ -210,9 +210,6 @@ d3.queue()
     .on('touchend', stopReset);
 
   function startReset() {
-    console.log('start reset');
-    console.log(d3.event);
-    d3.event.stopPropagation();
     d3.select(this).classed('active', true);
     simulation
       .alphaTarget(0.3).restart()
@@ -225,9 +222,6 @@ d3.queue()
   }
 
   function stopReset() {
-    console.log('stop reset');
-    console.log(d3.event);
-    d3.event.stopPropagation();
     d3.select(this).classed('active', false);
     simulation
       .alphaTarget(0)
@@ -241,7 +235,7 @@ d3.queue()
         // enable fork
         d3.select(this).classed('active', true);
         simulation
-          .force("fork", forceFork(.1, (window.innerWidth > 555 ? 100 : 40), d3.select('body')))
+          .force("fork", forceFork(.1, (window.innerWidth > 666 ? 100 : 40), d3.select('body')))
           .alphaDecay(0).restart();
 
       } else {
@@ -279,19 +273,22 @@ d3.queue()
 // fit stations to screen
 function projectStations(stations) {
   var xExtent = d3.extent(stations.map(function(d) { return +d.x; }));
-  var yExtent = d3.extent(stations.map(function(d) { return +d.y; }));
-
   var x = d3.scaleLinear()
     .domain(xExtent)
     .range([0,window.innerWidth]);
 
+  var yExtent = d3.extent(stations.map(function(d) { return +d.y; }));
   var y = d3.scaleLinear()
     .domain(yExtent)
     .range([0,window.innerHeight]);
 
+  // "contain" behavior, in background-position terms:
+  // scale both dimensions by the more-constrained dimension
+  var t = (x(1) - x(0) > y(1) - y(0)) ? y : x;
+
   stations.forEach(function(station) {
-    station.x = y(+station.x);
-    station.y = y(+station.y);
+    station.x = t(+station.x);
+    station.y = t(+station.y);
   })
 }
 
