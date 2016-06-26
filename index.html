@@ -10,6 +10,7 @@ html, body {
   padding: 0;
   width: 960px;
   height: 1700px;
+  background: #F2EAD6;
 }
 
 svg {
@@ -79,7 +80,9 @@ text {
   font-size: 10px;
   fill: rgba(0,0,0,.2);
   pointer-events: none;
+}
 
+* {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -87,10 +90,15 @@ text {
   user-select: none;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 555px) {
   body, html {
     width: 100%;
     height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  svg {
     overflow: hidden;
   }
 
@@ -146,7 +154,7 @@ d3.queue()
 .await(function(error, stations, transfers) {
   if (error) throw error;
 
-  if(innerWidth <= 500) projectStations(stations);
+  if(innerWidth <= 555) projectStations(stations);
   stations.forEach(parseStation);
   var links = getLinks(stations, transfers);
 
@@ -187,35 +195,41 @@ d3.queue()
   simulation.force("link")
       .links(links);
 
-  d3.select('button.repel')
-  	.on('mouseenter', function() {
-  		simulation
-	  		.alphaTarget(0.3).restart()
-	  		.force("charge", d3.forceManyBody());
-  	})
-  	.on('mouseleave', function() {
-  		simulation
-	  		.alphaTarget(0)
-  			.force("charge", null);
-  	});
+  // d3.select('button.repel')
+  // 	.on('mouseenter', function() {
+  // 		simulation
+	 //  		.alphaTarget(0.3).restart()
+	 //  		.force("charge", d3.forceManyBody());
+  // 	})
+  // 	.on('mouseleave', function() {
+  // 		simulation
+	 //  		.alphaTarget(0)
+  // 			.force("charge", null);
+  // 	});
 
   d3.select('button.reset')
-  	.on('mouseenter', function() {
-  		simulation
-	  		.alphaTarget(0.3).restart()
-	  		.force("resetX", d3.forceX(function(d) {
-	  			return d.x0;
-	  		}))
-	  		.force("resetY", d3.forceY(function(d) {
-	  			return d.y0;
-	  		}));
-  	})
-  	.on('mouseleave', function() {
-  		simulation
-	  		.alphaTarget(0)
-  			.force("resetX", null)
-  			.force("resetY", null);
-  	});
+  	.on('mouseenter', startReset)
+    .on('touchdown', startReset)
+  	.on('mouseleave', stopReset)
+    .on('touchup', stopReset);
+
+  function startReset() {
+    simulation
+      .alphaTarget(0.3).restart()
+      .force("resetX", d3.forceX(function(d) {
+        return d.x0;
+      }))
+      .force("resetY", d3.forceY(function(d) {
+        return d.y0;
+      }));
+  }
+
+  function stopReset() {
+    simulation
+      .alphaTarget(0)
+      .force("resetX", null)
+      .force("resetY", null);
+  }
 
   d3.select('button.fork')
     .on("click", function() {
@@ -223,7 +237,7 @@ d3.queue()
         // enable fork
         d3.select(this).classed('active', true);
         simulation
-          .force("fork", forceFork(.1, (window.innerWidth > 500 ? 100 : 50), d3.select('body')))
+          .force("fork", forceFork(.1, (window.innerWidth > 555 ? 100 : 50), d3.select('body')))
           .alphaDecay(0).restart();
 
       } else {
@@ -386,44 +400,36 @@ function forceFork(_, __, ___) {
       .attr('src', 'fork.png?v=2')
       .attr('width', radius * 2.5);
 
-    container.on('mousemove', function() {
-      fork
-        .style('left', d3.mouse(this)[0] + 'px')
-        .style('top', d3.mouse(this)[1] + 'px');
-
-      center = {
-        x: d3.mouse(this)[0],
-        y: d3.mouse(this)[1]
-      };
-    });
-
-    container.on('touchmove', function() {
-      fork
-        .style('left', d3.touch(this)[0] + 'px')
-        .style('top', d3.touch(this)[1] + 'px');
-
-      center = {
-        x: d3.touch(this)[0],
-        y: d3.touch(this)[1]
-      };
-    });
-
-    container.on('touchdown', function() {
-      fork
-        .style('left', d3.touch(this)[0] + 'px')
-        .style('top', d3.touch(this)[1] + 'px');
-
-      center = {
-        x: d3.touch(this)[0],
-        y: d3.touch(this)[1]
-      };
-    });
-
     container
-      .on('mousedown', function() { clockwise = d3.event.shiftKey ? -1 : 1; active = true; })
-      .on('touchstart', function() { active = true; })
-      .on('mouseup', function() { active = false; })
-      .on('touchend', function() { active = false; })
+      .on('mousedown.spin', start)
+      .on('touchstart.spin', start)
+      .on('mouseup.spin', stop)
+      .on('touchend.spin', stop)
+      .on('mousemove.position', position)
+      .on('touchstart.position', position)
+      .on('touchmove.position', position);
+
+    function start() {
+      clockwise = d3.event.shiftKey ? -1 : 1;
+      active = true;
+    }
+
+    function stop() {
+      active = false;
+    }
+
+    function position() {
+      var pt = d3.mouse(this);
+      fork
+        .style('left', pt[0] + 'px')
+        .style('top', pt[1] + 'px');
+
+      center = {
+        x: pt[0],
+        y: pt[1]
+      };
+    }
+
   }
 
   return force;
