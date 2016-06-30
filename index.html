@@ -278,8 +278,6 @@ d3.queue()
 
     node
         .attr("transform", function(d) { return "translate("+d.x+","+d.y+")"; })
-        // .attr("cx", function(d) { return d.x; })
-        // .attr("cy", function(d) { return d.y; })
         .classed("forking", function(d) { return d.forking; });
   }
 
@@ -371,17 +369,23 @@ function difference(a,b) {
 }
 
 function dragstarted(d) {
+  d.fx = d.x;
+  d.fy = d.y;
   if (!d3.event.active) simulation.alphaTarget(0.3).restart()
-  simulation.fix(d);
+  // simulation.fix(d);
 }
 
 function dragged(d) {
-  simulation.fix(d, d3.event.x, d3.event.y);
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+  // simulation.fix(d, d3.event.x, d3.event.y);
 }
 
 function dragended(d) {
+  d.fx = undefined;
+  d.fy = undefined;
   if (!d3.event.active) simulation.alphaTarget(0);
-  simulation.unfix(d);
+  // simulation.unfix(d);
 }
 
 function forceFork(_, __, ___) {
