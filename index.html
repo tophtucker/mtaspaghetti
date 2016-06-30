@@ -109,12 +109,16 @@ text {
 	<svg></svg>
 	<div class="controls">
     <button class="fork">Fork</button>
+    <button class="music">Music</button>
     <button class="reset">Reset</button>
     <!-- <button class="repel">Repel</button> -->
 	</div>
+
+<audio loop src="music.mp3"></audio>
+
 </body>
 
-<script src="d3.v4.0.0-alpha.50.min.js"></script>
+<script src="https://d3js.org/d3.v4.js"></script>
 <script>
 
 var svg = d3.select("svg"),
@@ -202,6 +206,17 @@ d3.queue()
 	 //  		.alphaTarget(0)
   // 			.force("charge", null);
   // 	});
+
+  d3.select('button.music')
+    .on('click', function() {
+      if(!d3.select(this).classed('active')) {
+        d3.select(this).classed('active', true);
+        d3.select('audio').node().play();
+      } else {
+        d3.select(this).classed('active', false);
+        d3.select('audio').node().pause();
+      }
+    });
 
   d3.select('button.reset')
   	.on('mousedown', startReset)
@@ -347,6 +362,14 @@ function distance(a,b) {
 	return Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
 }
 
+function difference(a,b) {
+  return d3.zip(a,b).map(function(x) { 
+    return x.reduce(function(a, b) { 
+      return a - b; 
+    }); 
+  });
+}
+
 function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.3).restart()
   simulation.fix(d);
@@ -374,14 +397,22 @@ function forceFork(_, __, ___) {
       radius    = __  || 100,
       container = ___ || d3.select('body'),
 
-      center = {x: 0, y: 0};
+      center = {x: 0, y: 0},
+      moves = [];
 
   function force(alpha) {
 
     if(!active) return;
 
     forkAngle += clockwise * strength;
-    fork.style('transform', 'translate(-50%,0%) rotate(' + forkAngle + 'rad)');
+    fork.style('transform', 'translate(-50%,0%) rotate(' + forkAngle + 'rad) scale(0.85)');
+
+    if(moves.length >= 2) {
+      var x0 = moves[0],
+          x1 = moves[moves.length-1],
+          dx = difference(x1,x0);
+      moves = [x1];
+    }
 
     for (var i = 0, n = nodes.length, node, k = alpha; i < n; ++i) {
       node = nodes[i];
@@ -389,6 +420,11 @@ function forceFork(_, __, ___) {
       if(node.forking) {
         node.vx += clockwise * strength * -(node.y - center.y);
         node.vy += clockwise * strength * (node.x - center.x);
+
+        if(dx) {
+          node.vx += dx[0];
+          node.vy += dx[1];
+        }
       }
     }
   }
@@ -417,10 +453,15 @@ function forceFork(_, __, ___) {
 
     function stop() {
       active = false;
+      fork.style('transform', 'translate(-50%,0%) rotate(' + forkAngle + 'rad) scale(1)');
+      moves = [];
     }
 
     function position() {
+
       var pt = d3.mouse(this);
+      if(active) moves.push(pt);
+
       fork
         .style('left', pt[0] + 'px')
         .style('top', pt[1] + 'px');
