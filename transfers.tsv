@@ -1,0 +1,39 @@
+fromLine	fromStation	toLine	toStation
+1	Washington Heights 168 St	A	Washington Heights 168 St
+1	59 St Columbus Circle	D	59 St Columbus Circle
+1	Times Sq 42 St	A	42 St Port Authority Bus Terminal
+1	South Ferry	R	Whitehall St
+4	59 St Lexington Ave	R	59 St Lexington Ave
+R	Times Sq 42 St	1	Times Sq 42 St
+R	34 St Herald Sq	D	34 St Herald Sq
+D	145 St	A	145 St
+D	125 St	A	125 St
+D	59 St Columbus Circle	A	59 St Columbus Circle
+7	42 St Grand Central	4	42 St Grand Central
+7	5 Av	D	42 St Bryant Park
+7	Times Sq 42 St	1	Times Sq 42 St
+A	West 4 St	D	West 4 St
+L	14 St Union Sq	R	14 St Union Sq
+L	14 St Union Sq	4	14 St Union Sq
+L	6 Av	1	14 St
+L	14 St 8 Av	A	14 St
+J	Canal St	R	Canal St
+J	Brooklyn Bridge Chambers St	4	Brooklyn Bridge Chambers St
+J	Fulton St	A	Fulton St
+J	Fulton St	4	Fulton St
+3	96 St	1	96 St
+3	72 St	1	72 St
+3	Times Sq 42 St	1	Times Sq 42 St
+3	34 St Penn Station	1	34 St Penn Station
+3	14 St	1	14 St
+3	Chambers St West Broadway	1	Chambers St West Broadway
+3	Park Pl	A	Chambers St Church St
+3	Fulton St	A	Fulton St
+F	Lexington Av	R	59 St Lexington Ave
+F	47-50 St Rockefeller Center	D	47-50 St Rockefeller Center
+M	47-50 St Rockefeller Center	F	47-50 St Rockefeller Center
+E	Court Sq	M	Court Sq
+E	Lexington Av	M	Lexington Av
+E	5 Av	M	5 Av
+E	7 Av	D	7 Av
+E	42 St Port Authority Bus Terminal	A	42 St Port Authority Bus Terminal

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MTA spaghetti</title>
+
+<style>
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 960px;
+  height: 1700px;
+  background: #F2EAD6;
+}
+
+svg {
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+}
+
+.links line {
+  stroke: #aaa;
+  stroke-width: 10;
+}
+
+.nodes circle {
+  pointer-events: all;
+  stroke: black;
+  stroke-width: 2;
+  fill: white;
+}
+
+.nodes circle.forking {
+  stroke: red;
+}
+
+.controls {
+	position: fixed;
+	top: 1em;
+	left: 1em;
+  z-index: 3;
+}
+
+button {
+	background: white;
+	border: 1px solid black;
+	border-radius: 50%;
+	width: 5em;
+	height: 5em;
+	padding: 1em;
+	cursor: pointer;
+	opacity: .5;
+}
+
+button:hover {
+	opacity: 1;
+}
+
+button.active {
+  border: 1px solid white;
+  background: black;
+  color: white;
+}
+
+img.fork {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  transform: translate(-50%,0%);
+  transform-origin: 50% 0%;
+}
+
+text {
+  font-family: sans-serif;
+  font-size: 10px;
+  fill: rgba(0,0,0,.2);
+  display: none;
+  pointer-events: none;
+}
+
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+@media (max-width: 666px) {
+  body, html {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  svg {
+    overflow: hidden;
+  }
+
+  text {
+    display: none;
+  }
+}
+
+</style>
+
+<body>
+	<svg></svg>
+	<div class="controls">
+    <button class="fork">Fork</button>
+    <button class="music">Music</button>
+    <button class="reset">Reset</button>
+    <!-- <button class="repel">Repel</button> -->
+	</div>
+
+<audio loop src="http://hrustevich.com/data/uploads/mp3/2013/tr01.mp3"></audio>
+
+</body>
+
+<script src="https://d3js.org/d3.v4.js"></script>
+<script>
+
+var svg = d3.select("svg"),
+    width = svg.node().getBoundingClientRect().width,
+    height = svg.node().getBoundingClientRect().height;
+
+var lineColors = {
+  '1': '#E00034',
+  '3': '#E00034',
+  'A': '#0039A6',
+  'E': '#0039A6',
+  '4': '#009B3A',
+  'R': '#FECB00',
+  'D': '#FF6319',
+  'F': '#FF6319',
+  'M': '#FF6319',
+  '7': '#B634BB',
+  'L': '#939598',
+  'J': '#955214',
+  'transfer': '#4D4D4D',
+  'ground': '#F2EAD6',
+  'water': '#A2CAEA',
+  'park': '#A8D7B9'
+};
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink()
+    	.id(function(d) { return d.id; })
+    	.distance(function(d) { return d.distance; })
+    )
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+d3.queue()
+.defer(d3.tsv, "stations.tsv")
+.defer(d3.tsv, "transfers.tsv")
+.await(function(error, stations, transfers) {
+  if (error) throw error;
+
+  if(innerWidth <= 666) projectStations(stations);
+  stations.forEach(parseStation);
+  var links = getLinks(stations, transfers);
+
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(links)
+    .enter().append("line")
+    .style('stroke', function(d) {
+    	return lineColors[d.type];
+    })
+    .style('stroke-width', function(d) {
+    	return d.type === 'transfer' ? 4 : 10;
+    });
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("circle")
+    .data(stations)
+    .enter().append("g")
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  node.append("circle")
+      .attr("r", 4)
+
+  node.append("text")
+      .attr("dx", "0.5em")
+      .attr("dy", "-0.5em")
+      .text(function(d) { return d.name; });
+
+  simulation
+      .nodes(stations)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(links);
+
+  // d3.select('button.repel')
+  // 	.on('mouseenter', function() {
+  // 		simulation
+	 //  		.alphaTarget(0.3).restart()
+	 //  		.force("charge", d3.forceManyBody());
+  // 	})
+  // 	.on('mouseleave', function() {
+  // 		simulation
+	 //  		.alphaTarget(0)
+  // 			.force("charge", null);
+  // 	});
+
+  d3.select('button.music')
+    .on('click', function() {
+      if(!d3.select(this).classed('active')) {
+        d3.select(this).classed('active', true);
+        d3.select('audio').node().play();
+      } else {
+        d3.select(this).classed('active', false);
+        d3.select('audio').node().pause();
+      }
+    });
+
+  d3.select('button.reset')
+  	.on('mousedown', startReset)
+    .on('touchstart', startReset)
+  	.on('mouseup', stopReset)
+    .on('touchend', stopReset);
+
+  function startReset() {
+    d3.select(this).classed('active', true);
+    simulation
+      .alphaTarget(0.3).restart()
+      .force("resetX", d3.forceX(function(d) {
+        return d.x0;
+      }))
+      .force("resetY", d3.forceY(function(d) {
+        return d.y0;
+      }));
+  }
+
+  function stopReset() {
+    d3.select(this).classed('active', false);
+    simulation
+      .alphaTarget(0)
+      .force("resetX", null)
+      .force("resetY", null);
+  }
+
+  d3.select('button.fork')
+    .on("click", function() {
+      if(!d3.select(this).classed('active')) {
+        // enable fork
+        d3.select(this).classed('active', true);
+        simulation
+          .force("fork", forceFork(.1, (window.innerWidth > 666 ? 100 : 40), d3.select('body')))
+          .alphaDecay(0).restart();
+
+      } else {
+        // disable fork
+        d3.select(this).classed('active', false);
+        d3.select('img.fork').remove();
+        simulation
+          .force("fork", null)
+          .alphaDecay(0.0228).restart();
+      }
+    })
+    .each(function() {
+      this.click();
+    });
+
+  // ticked();
+  // simulation.stop();
+
+  function ticked() {
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node
+        .attr("transform", function(d) { return "translate("+d.x+","+d.y+")"; })
+        .classed("forking", function(d) { return d.forking; });
+  }
+
+});
+
+// fit stations to screen
+function projectStations(stations) {
+  var xExtent = d3.extent(stations.map(function(d) { return +d.x; }));
+  var x = d3.scaleLinear()
+    .domain(xExtent)
+    .range([0,window.innerWidth]);
+
+  var yExtent = d3.extent(stations.map(function(d) { return +d.y; }));
+  var y = d3.scaleLinear()
+    .domain(yExtent)
+    .range([0,window.innerHeight]);
+
+  // "contain" behavior, in background-position terms:
+  // scale both dimensions by the more-constrained dimension
+  var t = (x(1) - x(0) > y(1) - y(0)) ? y : x;
+
+  stations.forEach(function(station) {
+    station.x = t(+station.x);
+    station.y = t(+station.y);
+  })
+}
+
+function parseStation(station) {
+	station.order = +station.order;
+	station.x = +station.x;
+	station.y = +station.y;
+
+	station.x0 = station.x;
+	station.y0 = station.y;
+
+	station.id = station.line + ' ' + station.name;
+}
+
+function getLinks(stations, transfers) {
+	var links = [];
+
+	stations.forEach(function(station) {
+		var nextStation = stations.filter(function(st) {
+			return st.line == station.line && st.order == station.order + 1;
+		});
+
+		if(nextStation.length) {
+			links.push({
+				'source': station.id,
+				'target': nextStation[0].id,
+				'distance': distance(station, nextStation[0]),
+				'type': station.line
+			})
+		} else {
+			return;
+		}
+	});
+
+	transfers.forEach(function(transfer) {
+		var source = stations.filter(function(st) {
+			return st.id == transfer.fromLine + ' ' + transfer.fromStation;
+		})[0];
+
+		var target = stations.filter(function(st) {
+			return st.id == transfer.toLine + ' ' + transfer.toStation;
+		})[0];
+
+		links.push({
+			'source': source.id,
+			'target': target.id,
+			'distance': distance(source, target),
+			'type': 'transfer'
+		});
+	});
+
+	return links;
+}
+
+function distance(a,b) {
+	return Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
+}
+
+function difference(a,b) {
+  return d3.zip(a,b).map(function(x) { 
+    return x.reduce(function(a, b) { 
+      return a - b; 
+    }); 
+  });
+}
+
+function dragstarted(d) {
+  d.fx = d.x;
+  d.fy = d.y;
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart()
+  // simulation.fix(d);
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+  // simulation.fix(d, d3.event.x, d3.event.y);
+}
+
+function dragended(d) {
+  d.fx = undefined;
+  d.fy = undefined;
+  if (!d3.event.active) simulation.alphaTarget(0);
+  // simulation.unfix(d);
+}
+
+function forceFork(_, __, ___) {
+
+  var active = false,
+      clockwise = 1,
+
+      nodes,
+      fork,
+      forkAngle = 0,
+
+      strength  = _   || 1,
+      radius    = __  || 100,
+      container = ___ || d3.select('body'),
+
+      center = {x: 0, y: 0},
+      moves = [];
+
+  function force(alpha) {
+
+    if(!active) return;
+
+    forkAngle += clockwise * strength;
+    fork.style('transform', 'translate(-50%,0%) rotate(' + forkAngle + 'rad) scale(0.85)');
+
+    if(moves.length >= 2) {
+      var x0 = moves[0],
+          x1 = moves[moves.length-1],
+          dx = difference(x1,x0);
+      moves = [x1];
+    }
+
+    for (var i = 0, n = nodes.length, node, k = alpha; i < n; ++i) {
+      node = nodes[i];
+      node.forking = distance(node, center) < radius;
+      if(node.forking) {
+        node.vx += clockwise * strength * -(node.y - center.y);
+        node.vy += clockwise * strength * (node.x - center.x);
+
+        if(dx) {
+          node.vx += dx[0];
+          node.vy += dx[1];
+        }
+      }
+    }
+  }
+
+  force.initialize = function(_) {
+    nodes = _;
+
+    fork = container.append('img')
+      .classed('fork', true)
+      .attr('src', 'fork.png?v=2')
+      .attr('width', radius * 2.5);
+
+    container
+      .on('mousedown.spin', start)
+      .on('touchstart.spin', start)
+      .on('mouseup.spin', stop)
+      .on('touchend.spin', stop)
+      .on('mousemove.position', position)
+      .on('touchstart.position', position)
+      .on('touchmove.position', position);
+
+    function start() {
+      clockwise = d3.event.shiftKey ? -1 : 1;
+      active = true;
+    }
+
+    function stop() {
+      active = false;
+      fork.style('transform', 'translate(-50%,0%) rotate(' + forkAngle + 'rad) scale(1)');
+      moves = [];
+    }
+
+    function position() {
+
+      var pt = d3.mouse(this);
+      if(active) moves.push(pt);
+
+      fork
+        .style('left', pt[0] + 'px')
+        .style('top', pt[1] + 'px');
+
+      center = {
+        x: pt[0],
+        y: pt[1]
+      };
+    }
+
+  }
+
+  return force;
+
+}
+
+
+</script>
